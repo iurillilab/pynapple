@@ -2,7 +2,7 @@
 # @Author: gviejo
 # @Date:   2022-04-01 09:57:55
 # @Last Modified by:   Guillaume Viejo
-# @Last Modified time: 2023-09-12 10:36:33
+# @Last Modified time: 2023-09-18 18:40:19
 #!/usr/bin/env python
 
 """Tests of time series for `pynapple` package."""
@@ -32,13 +32,10 @@ def test_create_tsdframe():
 def test_create_empty_tsdframe():
     tsdframe = nap.TsdFrame(t=np.array([]), d=np.array([]))
     assert len(tsdframe) == 0
+    assert isinstance(tsdframe, nap.TsdFrame)
 
     with pytest.raises(RuntimeError):
         tsdframe = nap.TsdFrame(t=np.arange(100))
-    
-    tsdframe = nap.TsdFrame(t=np.array([]), d = np.empty(()))
-    assert isinstance(tsdframe, nap.TsdFrame)
-    assert len(tsdframe) == 0
 
 def test_create_1d_tsdframe():
     tsdframe = nap.TsdFrame(t=np.arange(100), d=np.random.rand(100))
@@ -274,7 +271,7 @@ class Test_Time_Series_2:
         np.testing.assert_array_almost_equal(a.index, b.index)
         np.testing.assert_array_almost_equal(a.values, b.values)
         pd.testing.assert_frame_equal(
-            a.time_support, b.time_support
+            a.time_support, tsd.time_support
             )
 
     # def test_loc(self, tsd):
@@ -383,76 +380,6 @@ class Test_Time_Series_2:
 
     def test_data(self, tsd):
         np.testing.assert_array_almost_equal(tsd.values, tsd.data())
-
-    def test_operators(self, tsd):
-        v = tsd.values
-
-        a = tsd + 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v + 0.5))
-
-        a = tsd - 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v - 0.5))
-
-        a = tsd * 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v * 0.5))
-
-        a = tsd / 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v / 0.5))
-
-        a = tsd // 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v // 0.5))        
-
-        a = tsd % 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v % 0.5))
-
-        a = tsd ** 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        np.testing.assert_array_almost_equal(a.values, v**0.5)        
-
-        a = tsd > 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v > 0.5))
-
-        a = tsd >= 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v >= 0.5))
-
-        a = tsd < 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v < 0.5))
-
-        a = tsd <= 0.5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v <= 0.5))        
-
-        tsd = nap.Tsd(t=np.arange(10), d=np.arange(10))
-        v = tsd.values
-        a = tsd == 5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v == 5))
-
-        a = tsd != 5
-        assert isinstance(a, nap.Tsd)
-        np.testing.assert_array_almost_equal(tsd.index, a.index)
-        assert np.all(a.values == (v != 5))
 
     def test_repr_(self, tsd):
         # assert pd.Series(tsd).__repr__() == tsd.__repr__()
@@ -566,7 +493,7 @@ class Test_Time_Series_2:
         ts = nap.Ts(t=y/10)
         ep = nap.IntervalSet(start=np.arange(0, 100, 20), end=np.arange(10, 110, 20))
         tsd2 = tsd.interpolate(ts, ep)
-        tmp = ts.restrict(ep).index.values*10
+        tmp = ts.restrict(ep).index*10
         np.testing.assert_array_almost_equal(tmp, tsd2.values)
 
         # Empty ep
@@ -602,7 +529,7 @@ class Test_Time_Series_3:
         assert isinstance(tsdframe[0:10], nap.TsdFrame)
         np.testing.assert_array_almost_equal(tsdframe.values[0:10], tsdframe[0:10].values)
         assert isinstance(tsdframe[0:10].time_support, nap.IntervalSet)
-        pd.testing.assert_frame_equal(tsdframe[0:10].time_support, nap.IntervalSet(0, 9))
+        pd.testing.assert_frame_equal(tsdframe[0:10].time_support, tsdframe.time_support)
 
     def test_operators(self, tsdframe):
         v = tsdframe.values

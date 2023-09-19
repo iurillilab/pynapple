@@ -2,7 +2,7 @@
 # @Author: guillaume
 # @Date:   2022-10-31 16:44:31
 # @Last Modified by:   Guillaume Viejo
-# @Last Modified time: 2023-06-28 14:35:52
+# @Last Modified time: 2023-09-18 15:20:41
 import numpy as np
 from numba import jit
 
@@ -309,9 +309,7 @@ def jitvaluefrom(time_array, time_target_array, data_target_array, starts, ends)
     TYPE
         Description
     """
-    time_array, _, count = jitrestrict_with_count(
-        time_array, np.zeros(time_array.shape[0]), starts, ends
-    )
+    time_array, count = jittsrestrict_with_count(time_array, starts, ends)
     time_target_array, data_target_array, count_target = jitrestrict_with_count(
         time_target_array, data_target_array, starts, ends
     )
@@ -348,9 +346,7 @@ def jitvaluefrom(time_array, time_target_array, data_target_array, starts, ends)
 
 
 @jit(nopython=True)
-def jitvaluefromtsdframe(
-    time_array, time_target_array, data_target_array, starts, ends
-):
+def jitvaluefromtensor(time_array, time_target_array, data_target_array, starts, ends):
     """Summary
 
     Parameters
@@ -383,7 +379,7 @@ def jitvaluefromtsdframe(
     d = time_target_array.shape[0]
 
     new_data_array = np.zeros(
-        (n, data_target_array.shape[1]), dtype=data_target_array.dtype
+        (n, *data_target_array.shape[1:]), dtype=data_target_array.dtype
     )
 
     if n > 0 and d > 0:
@@ -524,7 +520,7 @@ def jitbin_array(time_array, data_array, starts, ends, bin_size):
     )
 
     m = starts.shape[0]
-    f = data_array.shape[1]
+    f = data_array.shape[1:]
 
     nb_bins = np.zeros(m, dtype=np.int32)
     for k in range(m):
@@ -535,8 +531,8 @@ def jitbin_array(time_array, data_array, starts, ends, bin_size):
 
     nb = np.sum(nb_bins)
     bins = np.zeros(nb, dtype=np.float64)
-    cnt = np.zeros(nb, dtype=np.float64)
-    average = np.zeros((nb, f), dtype=np.float64)
+    cnt = np.zeros((nb, *f), dtype=np.float64)
+    average = np.zeros((nb, *f), dtype=np.float64)
 
     k = 0
     t = 0
@@ -568,7 +564,8 @@ def jitbin_array(time_array, data_array, starts, ends, bin_size):
         k += 1
 
     new_time_array = bins[0:b]
-    new_data_array = average[0:b] / np.expand_dims(cnt[0:b], -1)
+
+    new_data_array = average[0:b] / cnt[0:b]
 
     return (new_time_array, new_data_array)
 
